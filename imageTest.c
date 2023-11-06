@@ -18,9 +18,13 @@
 #include "image8bit.h"
 #include "instrumentation.h"
 
+void error(int a,int b, char* x ,const char* str,char* str2){
+}
+
+
 int main(int argc, char* argv[]) {
   if (argc != 3) {
-    error(1, 0, "Usage: imageTest input.pgm output.pgm");
+    //error(1, 0, "Usage: imageTest input.pgm output.pgm");
   }
 
   ImageInit();
@@ -39,7 +43,7 @@ int main(int argc, char* argv[]) {
   //img2 = ImageCrop(img1, ImageWidth(img1)/4, ImageHeight(img1)/4, ImageWidth(img1)/2, ImageHeight(img1)/2);
   Image img2 = ImageRotate(img1);
   if (img2 == NULL) {
-    error(2, errno, "Rotating img2: %s", ImageErrMsg());
+    //error(2, errno, "Rotating img2: %s", ImageErrMsg());
   }
 
   //ImageNegative(img2);

@@ -87,7 +87,7 @@ static char* errors[] = {
 
 int main(int ac, char* av[]) {
   if (ac <= 1) {
-    error(5, 0, "\n%s", USAGE);
+    //error(5, 0, "\n%s", USAGE);
   }
 
   ImageInit();
@@ -221,7 +221,7 @@ int main(int ac, char* av[]) {
     ImageDestroy(&img[--n]);
   }
 
-  error(err, errno, errors[err], ImageErrMsg());
+  //error(err, errno, errors[err], ImageErrMsg());
   return 0;
 }
 

@@ -10,7 +10,7 @@
 /// 2013, 2023
 
 // Student authors (fill in below):
-// NMec:  Name:
+// NMec:113012  Name:José Almeida
 // 
 // 
 // 
@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "instrumentation.h"
@@ -172,6 +173,20 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert (height >= 0);
   assert (0 < maxval && maxval <= PixMax);
   // Insert your code here!
+  // Alocaçao de memoria a imagem;
+  Image image_1 = (Image)malloc(sizeof(struct image));
+  // Alocaçao e inicializaçao da componetes da imagem
+  image_1->height=height;
+  image_1->width=width;
+  image_1->maxval=maxval;
+  // Alocaçao de memoria para os pixeis
+  image_1->pixel=(uint8*)malloc(sizeof(uint8)*height*width);
+
+  // Inicializaçao dos pixeis(0)
+    for (int i = 0; i < width * height; i++) {
+        image_1->pixel[i] = 0;
+  }
+  return image_1;
 }
 
 /// Destroy the image pointed to by (*imgp).
@@ -182,6 +197,10 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
 void ImageDestroy(Image* imgp) { ///
   assert (imgp != NULL);
   // Insert your code here!
+  Image imagi = *imgp;
+  free(imagi->pixel);
+  free(imagi);
+  *imgp=NULL;
 }
 
 
@@ -230,7 +249,6 @@ Image ImageLoad(const char* filename) { ///
   // Read pixels
   check( fread(img->pixel, sizeof(uint8), w*h, f) == w*h , "Reading pixels" );
   PIXMEM += (unsigned long)(w*h);  // count pixel memory accesses
-
   // Cleanup
   if (!success) {
     errsave = errno;
@@ -294,6 +312,16 @@ int ImageMaxval(Image img) { ///
 void ImageStats(Image img, uint8* min, uint8* max) { ///
   assert (img != NULL);
   // Insert your code here!
+  *min = img->pixel[0];
+  *max = img->pixel[0];
+  for (uint8 pos = 1; pos < img->height*img->width;pos++) {
+    if (img->pixel[pos]<*min) {
+      *min = img->pixel[pos];
+    }
+    if (img->pixel[pos]>*max) {
+      *max = img->pixel[pos];
+    }
+  }
 }
 
 /// Check if pixel position (x,y) is inside img.
@@ -306,6 +334,10 @@ int ImageValidPos(Image img, int x, int y) { ///
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert (img != NULL);
   // Insert your code here!
+  if (ImageValidPos( img,x,y)||ImageValidPos(img,x,h)||
+    ImageValidPos(img,w,y)||ImageValidPos(img,w,h))
+    return 1;
+  return 0;
 }
 
 /// Pixel get & set operations
@@ -321,6 +353,7 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 static inline int G(Image img, int x, int y) {
   int index;
   // Insert your code here!
+  index = x+y*img->width;
   assert (0 <= index && index < img->width*img->height);
   return index;
 }
@@ -356,6 +389,9 @@ void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
 void ImageNegative(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
+  for(long pos = 0; pos < img->height*img->width;pos++){
+    img->pixel[pos]= img->maxval-img->pixel[pos];
+  }
 }
 
 /// Apply threshold to image.
@@ -364,6 +400,13 @@ void ImageNegative(Image img) { ///
 void ImageThreshold(Image img, uint8 thr) { ///
   assert (img != NULL);
   // Insert your code here!
+  for(long pos = 0; pos < img->height*img->width;pos++){
+    if(img->pixel[pos]>= thr){
+      img->pixel[pos]= img->maxval;
+      continue;
+    }
+    img->pixel[pos]=0;
+  }
 }
 
 /// Brighten image by a factor.
@@ -372,8 +415,19 @@ void ImageThreshold(Image img, uint8 thr) { ///
 /// darken the image if factor<1.0.
 void ImageBrighten(Image img, double factor) { ///
   assert (img != NULL);
+
   // ? assert (factor >= 0.0);
+  assert(factor>=0);
+
   // Insert your code here!
+  for(long pos = 0; pos < img->height*img->width;pos++){
+    if(img->pixel[pos]*factor<=img->maxval){
+      img->pixel[pos]= img->pixel[pos]*factor;
+      continue;
+    }
+    img->pixel[pos]= img->maxval;
+  }
+  printf("%d",img->pixel[4*img->height+90]);
 }
 
 
@@ -401,6 +455,7 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
+  return 0;
 }
 
 /// Mirror an image = flip left-right.
@@ -413,6 +468,7 @@ Image ImageRotate(Image img) { ///
 Image ImageMirror(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
+  return 0;
 }
 
 /// Crop a rectangular subimage from img.
@@ -431,6 +487,7 @@ Image ImageCrop(Image img, int x, int y, int w, int h) { ///
   assert (img != NULL);
   assert (ImageValidRect(img, x, y, w, h));
   // Insert your code here!
+  return 0;
 }
 
 
@@ -468,6 +525,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert (img2 != NULL);
   assert (ImageValidPos(img1, x, y));
   // Insert your code here!
+  return 0;
 }
 
 /// Locate a subimage inside another image.
@@ -478,6 +536,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
   assert (img1 != NULL);
   assert (img2 != NULL);
   // Insert your code here!
+  return 0;
 }
 
 
