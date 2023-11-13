@@ -26,6 +26,10 @@ int main(){
     }
     printf("%d",(uint8)(ImageGetPixel(img3, 150,2)*0.33));
     printf("\\%d",(ImageGetPixel(img, 150,2))==ImageGetPixel(img2, 150,2));
+    uint8 max,min;
+    printf("Ini");
+    ImageStats(img2, &min, &max);
+    printf("\n%d//%d",max,min);
     ImageDestroy(&img);
     ImageDestroy(&img2);
     ImageDestroy(&img3);
