@@ -8,7 +8,7 @@
 #include "image8bit.h"
 
 
-int main(){
+int test1(){
     ImageInit();
     Image img = ImageLoad("bri.pgm");
     Image img2 = ImageLoad("bricopy.pgm");
@@ -34,5 +34,29 @@ int main(){
     ImageDestroy(&img2);
     ImageDestroy(&img3);
     printf("f");
+    return NULL;
+}
+int test2(){
+    ImageInit();
+    Image img = ImageLoad("rotate.pgm");
+    Image img2 = ImageLoad("rotate copy.pgm");
+    uint8 x;
+    uint8 x1;
+    int o;
+    for(long u=0;u<ImageHeight(img);u++){
+        for (long y=0;y<ImageWidth(img);y++) {
+            if(!(ImageGetPixel(img, y,u) == ImageGetPixel(img2,y,u))){
+                printf("%d|%d||R%d|C%d\n",u,y,ImageGetPixel(img, y,u),
+                ImageGetPixel(img2,y,u));
+            }
+        }
+    }
+    ImageDestroy(&img);
+    ImageDestroy(&img2);
+    printf("f");
+    return NULL;
+}
+int main(){
+    test2();
 }
 //bri copy

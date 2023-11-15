@@ -24,11 +24,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include <iso646.h>
-#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 
 // The data structure
 //
@@ -424,8 +422,8 @@ void ImageBrighten(Image img, double factor) { ///
 
   // Insert your code here!
   for (long pos = 0; pos < img->height * img->width; pos++) {
-    if (round(img->pixel[pos] * factor) <= img->maxval) {
-      img->pixel[pos] = round(img->pixel[pos] * factor);
+    if ((int)(img->pixel[pos] * factor+0.5) <= img->maxval) {
+      img->pixel[pos] = (int)(img->pixel[pos] * factor+0.5);
       continue;
     }
     img->pixel[pos] = img->maxval;
@@ -456,7 +454,18 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
-  return 0;
+  int imgInHEight = ImageHeight(img);
+  Image imgReturn =
+      ImageCreate(imgInHEight, ImageWidth(img), ImageMaxval(img));
+  printf("%d||%d\n",imgReturn->height,imgReturn->width);      
+  *imgReturn->pixel = *img->pixel;
+  for (int y = 0; y <imgInHEight; y++) {
+    for (int x = 0; x <ImageWidth(img); x++) {
+      ImageSetPixel(imgReturn, imgInHEight-y-1, x,ImageGetPixel(img,x,y));
+    }
+  }
+
+  return imgReturn;
 }
 
 /// Mirror an image = flip left-right.
