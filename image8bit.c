@@ -454,47 +454,20 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
-  int imgInHEight = ImageHeight(img);
-  Image imgReturn = ImageCreate(imgInHEight, ImageWidth(img), ImageMaxval(img));
-  printf("%d||%d\n",imgReturn->height,imgReturn->width);      
-  *imgReturn->pixel = *img->pixel;
-  for (int y = 0; y <imgInHEight; y++) {
-    for (int x = 0; x <ImageWidth(img); x++) {
-      ImageSetPixel(imgReturn, imgInHEight-y-1, x,ImageGetPixel(img,x,y));
+  int imgInHeight = ImageHeight(img);
+  int imgInWidth = ImageWidth(img); 
+
+  Image imgReturn =ImageCreate(imgInHeight, imgInWidth, ImageMaxval(img)); 
+
+  for (int y = 0; y <imgInHeight; y++) {
+    for (int x = 0; x <imgInWidth; x++) {
+      ImageSetPixel(imgReturn,y, imgInWidth-x-1,ImageGetPixel(img,x,y));
     }
   }
 
   return imgReturn;
 }
 
-
-/*
-//clockwise
-
-img_rotated->pixel[(img->height - y - 1) + x * img_rotated->width] = img->pixel[x + y * img->width];
-
-
-Image ImageRotate(Image img) {
-    assert(img != NULL);
-
-    // Create a new image with swapped width and height
-    Image img_rotated = ImageCreate(img->height, img->width, img->maxval);
-    if (img_rotated == NULL) {
-        return NULL;
-    }
-
-    // Copy pixels from the original image to the new image in a rotated manner
-    for (int x = 0; x < img->width; x++) {
-        for (int y = 0; y < img->height; y++) {
-            // In the rotated image, the pixel at (y, img->width - x - 1) corresponds to the pixel at (x, y) in the original image
-            img_rotated->pixel[y + (img->width - x - 1) * img_rotated->width] = img->pixel[x + y * img->width];
-        }
-    }
-
-    return img_rotated;
-}
-
-*/
 
 /// Mirror an image = flip left-right.
 /// Returns a mirrored version of the image.
