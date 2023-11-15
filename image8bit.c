@@ -456,6 +456,9 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
+
+
+
   return 0;
 }
 
@@ -469,7 +472,20 @@ Image ImageRotate(Image img) { ///
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
-  return 0;
+
+  Image img2 = ImageCreate(img->width, img->height, (uint8)img->maxval);
+
+  if (img2==NULL) {
+    return NULL;
+  }
+
+  for (long pos = 0; pos < img2->height * img2->width; pos++) {
+    for (long x = 0; x <img2->width; x++) {
+      img2->pixel[pos] = img2->pixel[(img2->width*img2->height) - x];
+    }
+  }
+
+  return img2;
 }
 
 /// Crop a rectangular subimage from img.

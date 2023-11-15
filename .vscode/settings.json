@@ -1,0 +1,15 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Users\\igorz\\Documents\\GitHub\\trabalho1-113012-114221",
+            "binaryPath": "c:\\Users\\igorz\\Documents\\GitHub\\trabalho1-113012-114221\\imageTest",
+            "binaryArgs": []
+        },
+        {
+            "cwd": "c:\\Users\\igorz\\Documents\\GitHub\\trabalho1-113012-114221",
+            "binaryPath": "c:\\Users\\igorz\\Documents\\GitHub\\trabalho1-113012-114221\\imageTool",
+            "binaryArgs": []
+        }
+    ],
+    "C_Cpp.errorSquiggles": "disabled"
+}
