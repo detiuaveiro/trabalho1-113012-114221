@@ -455,13 +455,12 @@ Image ImageRotate(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
   int imgInHEight = ImageHeight(img);
+  int imgInWidth = ImageWidth( img);
   Image imgReturn =
       ImageCreate(imgInHEight, ImageWidth(img), ImageMaxval(img));
-  printf("%d||%d\n",imgReturn->height,imgReturn->width);      
-  *imgReturn->pixel = *img->pixel;
   for (int y = 0; y <imgInHEight; y++) {
-    for (int x = 0; x <ImageWidth(img); x++) {
-      ImageSetPixel(imgReturn, imgInHEight-y-1, x,ImageGetPixel(img,x,y));
+    for (int x = 0; x <imgInWidth; x++) {
+      ImageSetPixel(imgReturn,y, imgInWidth-x-1,ImageGetPixel(img,x,y));
     }
   }
 

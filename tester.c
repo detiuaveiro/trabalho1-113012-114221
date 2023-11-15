@@ -60,3 +60,4 @@ int main(){
     test2();
 }
 //bri copy
+//printf("%d|%d||%d|%d||%d\n",y,imgInWidth-x,x,y,ImageValidPos(imgReturn,imgInHEight-y-1, imgInWidth-x-1));
