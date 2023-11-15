@@ -466,7 +466,6 @@ Image ImageRotate(Image img) { ///
   return imgReturn;
 }
 
-
 /// Mirror an image = flip left-right.
 /// Returns a mirrored version of the image.
 /// Ensures: The original img is not modified.
@@ -477,19 +476,14 @@ Image ImageRotate(Image img) { ///
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
-
-  Image img2 = ImageCreate(img->width, img->height, (uint8)img->maxval);
-
-  if (img2==NULL) {
-    return NULL;
-  }
-
-  for (long pos = 0; pos < img2->height * img2->width; pos++) {
-    for (long x = 0; x <img2->width; x++) {
-      img2->pixel[pos] = img2->pixel[(img2->width*img2->height) - x];
+  int imgInHEight = ImageHeight(img);
+  int imgInWidth = ImageWidth(img);
+  Image imgReturn = ImageCreate(imgInWidth, imgInHEight, ImageMaxval(img));
+  for (int y = 0; y < imgInHEight; y++) {
+    for (int x = 0; x < imgInWidth; x++) {
+      ImageSetPixel(imgReturn, x, y, ImageGetPixel(img, imgInWidth - x - 1, y));
     }
   }
-
   return imgReturn;
 }
 

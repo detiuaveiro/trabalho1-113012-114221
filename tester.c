@@ -77,26 +77,6 @@ int test3(){
     printf("f");
     return NULL;
 }
-int test3(){
-    ImageInit();
-    Image img = ImageLoad("mirror.pgm");
-    Image img2 = ImageLoad("mirror copy.pgm");
-    uint8 x;
-    uint8 x1;
-    int o;
-    for(long u=0;u<ImageHeight(img);u++){
-        for (long y=0;y<ImageWidth(img);y++) {
-            if(!(ImageGetPixel(img, y,u) == ImageGetPixel(img2,y,u))){
-                printf("%d|%d||R%d|C%d\n",u,y,ImageGetPixel(img, y,u),
-                ImageGetPixel(img2,y,u));
-            }
-        }
-    }
-    ImageDestroy(&img);
-    ImageDestroy(&img2);
-    printf("f");
-    return NULL;
-}
 int main(){
     test3();
 }
