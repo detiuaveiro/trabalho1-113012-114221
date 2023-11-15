@@ -422,8 +422,8 @@ void ImageBrighten(Image img, double factor) { ///
 
   // Insert your code here!
   for (long pos = 0; pos < img->height * img->width; pos++) {
-    if ((int)(img->pixel[pos] * factor+0.5) <= img->maxval) {
-      img->pixel[pos] = (int)(img->pixel[pos] * factor+0.5);
+    if ((int)(img->pixel[pos] * factor + 0.5) <= img->maxval) {
+      img->pixel[pos] = (int)(img->pixel[pos] * factor + 0.5);
       continue;
     }
     img->pixel[pos] = img->maxval;
@@ -455,12 +455,11 @@ Image ImageRotate(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
   int imgInHEight = ImageHeight(img);
-  int imgInWidth = ImageWidth( img);
-  Image imgReturn =
-      ImageCreate(imgInHEight, ImageWidth(img), ImageMaxval(img));
-  for (int y = 0; y <imgInHEight; y++) {
-    for (int x = 0; x <imgInWidth; x++) {
-      ImageSetPixel(imgReturn,y, imgInWidth-x-1,ImageGetPixel(img,x,y));
+  int imgInWidth = ImageWidth(img);
+  Image imgReturn = ImageCreate(imgInHEight, imgInWidth, ImageMaxval(img));
+  for (int y = 0; y < imgInHEight; y++) {
+    for (int x = 0; x < imgInWidth; x++) {
+      ImageSetPixel(imgReturn, y, imgInWidth - x - 1, ImageGetPixel(img, x, y));
     }
   }
 
@@ -477,20 +476,16 @@ Image ImageRotate(Image img) { ///
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
-
-  Image img2 = ImageCreate(img->width, img->height, (uint8)img->maxval);
-
-  if (img2==NULL) {
-    return NULL;
-  }
-
-  for (long pos = 0; pos < img2->height * img2->width; pos++) {
-    for (long x = 0; x <img2->width; x++) {
-      img2->pixel[pos] = img2->pixel[(img2->width*img2->height) - x];
+  int imgInHEight = ImageHeight(img);
+  int imgInWidth = ImageWidth(img);
+  Image imgReturn = ImageCreate(imgInWidth, imgInHEight, ImageMaxval(img));
+  for (int y = 0; y < imgInHEight; y++) {
+    for (int x = 0; x < imgInWidth; x++) {
+      ImageSetPixel(imgReturn, x,y, ImageGetPixel(img, imgInWidth-x-1, y));
     }
   }
 
-  return img2;
+  return imgReturn;
 }
 
 /// Crop a rectangular subimage from img.
