@@ -54,7 +54,11 @@ struct image {
   int maxval;   // maximum gray value (pixels with maxval are pure WHITE)
   uint8 *pixel; // pixel data (a raster scan)
 };
-
+// Def True or False
+struct Bool {
+#define True 1 == 1
+#define False !(True)
+};
 // This module follows "design-by-contract" principles.
 // Read `Design-by-Contract.md` for more details.
 
@@ -337,10 +341,9 @@ int ImageValidPos(Image img, int x, int y) { ///
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
   // Insert your code here!
-  if (ImageValidPos(img, x, y) || ImageValidPos(img, x, h) ||
-      ImageValidPos(img, w, y) || ImageValidPos(img, w, h))
-    return 1;
-  return 0;
+  if (ImageValidPos(img, x, y) || ImageValidPos(img, x + w, y + h))
+    return True;
+  return False;
 }
 
 /// Pixel get & set operations
@@ -503,7 +506,13 @@ Image ImageCrop(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
   assert(ImageValidRect(img, x, y, w, h));
   // Insert your code here!
-  return 0;
+  Image imgReturn = ImageCreate(w, h, ImageMaxval(img));
+  for (int yh = 0; yh < h; yh++) {
+    for (int xw = 0; xw < w; xw++) {
+      ImageSetPixel(imgReturn, xw, yh, ImageGetPixel(img, x + xw, y + yh));
+    }
+  }
+  return imgReturn;
 }
 
 /// Operations on two images
@@ -517,6 +526,11 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
   // Insert your code here!
+  for (int yh = 0; yh < img2->height; yh++) {
+    for (int xw = 0; xw < img2->width; xw++) {
+      ImageSetPixel(img1, x + xw, y + yh, ImageGetPixel(img2, xw, yh));
+    }
+  }
 }
 
 /// Blend an image into a larger image.
@@ -530,6 +544,14 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
   // Insert your code here!
+  uint8 level = 0;
+  for (int yh = 0; yh < img2->height; yh++) {
+    for (int xw = 0; xw < img2->width; xw++) {
+      level = (int)((1 - alpha) * ImageGetPixel(img1, x + xw, y + yh) +
+                    (alpha)*ImageGetPixel(img2, xw, yh) + 0.5);
+      ImageSetPixel(img1, x + xw, y + yh, level);
+    }
+  }
 }
 
 /// Compare an image to a subimage of a larger image.
@@ -540,7 +562,13 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
   // Insert your code here!
-  return 0;
+  for (int yh = 0; yh < img2->height; yh++) {
+    for (int xw = 0; xw < img2->width; xw++) {
+      if (!(ImageGetPixel(img1, x + xw, y + yh) == ImageGetPixel(img2, xw, yh)))
+        return 0;
+    }
+  }
+  return 1;
 }
 
 /// Locate a subimage inside another image.
@@ -551,6 +579,29 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   // Insert your code here!
+  int f;
+  for (int y = 0; y < img1->height - img2->height; y++) {
+    for (int x = 0; x < img1->width - img2->width; x++) {
+      f = 1;
+      for (int yh = y; yh < img2->height; yh++) {
+        for (int xw = x; xw < img2->width; xw++) {
+          if (!(ImageGetPixel(img1, x + xw, y + yh) ==
+                ImageGetPixel(img2, xw, yh))) {
+            f = 0;
+            break;
+          }
+        }
+        if (f == 0) {
+          break;
+        }
+      }
+      if (f == 1) {
+        *px = x;
+        *py = y;
+        return 1;
+      }
+    }
+  }
   return 0;
 }
 
@@ -562,4 +613,29 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
+  assert(img != NULL);
+  Image imgc = ImageCreate(img->width, img->height, img->maxval);
+  float sum;
+  int num, imgHei = img->height, imgWid = img->width;
+  for (int pos = 0; pos < imgHei * imgWid; pos++) {
+    imgc->pixel[pos] = img->pixel[pos];
+  }
+  for (int y = 0; y < imgHei; y++) {
+    for (int x = 0; x < imgWid; x++) {
+      sum = 0;
+      num = 0;
+      for (int yh = y - dx; yh <= y + dx; yh++) {
+        if (yh < 0 || yh >= imgHei)
+          continue;
+        for (int xw = x - dx; xw <= x + dx; xw++) {
+          if (xw < 0 || xw >= imgWid)
+            continue;
+          sum += ImageGetPixel(imgc, xw, yh);
+          num++;
+        }
+      }
+      ImageSetPixel(img, x, y, (int)((sum / num) + 0.5));
+    }
+  }
+  ImageDestroy(&imgc);
 }
