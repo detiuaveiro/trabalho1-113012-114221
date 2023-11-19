@@ -54,11 +54,7 @@ struct image {
   int maxval;   // maximum gray value (pixels with maxval are pure WHITE)
   uint8 *pixel; // pixel data (a raster scan)
 };
-// Def True or False
-struct Bool {
-#define True 1 == 1
-#define False !(True)
-};
+
 // This module follows "design-by-contract" principles.
 // Read `Design-by-Contract.md` for more details.
 
@@ -342,8 +338,8 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
   // Insert your code here!
   if (ImageValidPos(img, x, y) || ImageValidPos(img, x + w, y + h))
-    return True;
-  return False;
+    return 1;
+  return 0;
 }
 
 /// Pixel get & set operations
