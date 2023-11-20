@@ -192,9 +192,8 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
 void ImageDestroy(Image *imgp) { ///
   assert(imgp != NULL);
   // Insert your code here!
-  Image imagi = *imgp;
-  free(imagi->pixel);
-  free(imagi);
+  free((*imgp)->pixel);
+  free(*imgp);
   *imgp = NULL;
 }
 
@@ -606,7 +605,7 @@ void ImageBlur(Image img, int dx, int dy) { ///
     for (int x = 0; x < imgWid; x++) {
       sum = 0;
       num = 0;
-      for (int yh = y - dx; yh <= y + dx; yh++) {
+      for (int yh = y - dy; yh <= y + dy; yh++) {
         if (yh < 0 || yh >= imgHei)
           continue;
         for (int xw = x - dx; xw <= x + dx; xw++) {
