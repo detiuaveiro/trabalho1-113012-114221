@@ -174,13 +174,9 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   image_1->height = height;
   image_1->width = width;
   image_1->maxval = maxval;
-  // Alocaçao de memoria para os pixeis
-  image_1->pixel = (uint8 *)malloc(sizeof(uint8) * height * width);
+  // Alocaçao de memoria e valor(0) para os pixeis
+  image_1->pixel = (uint8 *)calloc( height * width,sizeof(uint8));
 
-  // Inicializaçao dos pixeis(0)
-  for (int i = 0; i < width * height; i++) {
-    image_1->pixel[i] = 0;
-  }
   return image_1;
 }
 
@@ -557,8 +553,11 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
   // Insert your code here!
+  // for para percorer as linhas
   for (int yh = 0; yh < img2->height; yh++) {
+    // for para percorrer as colunas
     for (int xw = 0; xw < img2->width; xw++) {
+      // if para testar cada pixel se nao um for diferente retorna 0 senao continua
       if (!(ImageGetPixel(img1, x + xw, y + yh) == ImageGetPixel(img2, xw, yh)))
         return 0;
     }
@@ -574,8 +573,13 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   // Insert your code here!
+
+  // for para percorer as linhas
   for (int y = 0; y < img1->height - img2->height; y++) {
+    // for para percorrer as colunas
     for (int x = 0; x < img1->width - img2->width; x++) {
+      // if para ver se a imagem e igual usando uma funçao ja construida
+      // anteriormente
       if (ImageMatchSubImage(img1, x, y, img2)) {
         *px = x;
         *py = y;
@@ -595,16 +599,23 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
   assert(img != NULL);
-  Image imgc = ImageCreate(img->width, img->height, img->maxval);
+  // Variveis necesarias para os caculos
   float sum;
   int num, imgHei = img->height, imgWid = img->width;
+  // Cria uma copia da imagem para ir buscar os pixel para o blur
+  Image imgc = ImageCreate(img->width, img->height, img->maxval);
+  // for para copiar os valores dos pixeis
   for (int pos = 0; pos < imgHei * imgWid; pos++) {
     imgc->pixel[pos] = img->pixel[pos];
   }
+  // for para percorer as linhas
   for (int y = 0; y < imgHei; y++) {
+    // for para percorrer as colunas
     for (int x = 0; x < imgWid; x++) {
+      // reseter os valores para cada pixel
       sum = 0;
       num = 0;
+      // for para percorer os pixeis do quadrado do blur
       for (int yh = y - dy; yh <= y + dy; yh++) {
         if (yh < 0 || yh >= imgHei)
           continue;
@@ -615,8 +626,10 @@ void ImageBlur(Image img, int dx, int dy) { ///
           num++;
         }
       }
+      // Alteraçao do pixel da imagem
       ImageSetPixel(img, x, y, (int)((sum / num) + 0.5));
     }
   }
+  // Destruiçao da copia
   ImageDestroy(&imgc);
 }
