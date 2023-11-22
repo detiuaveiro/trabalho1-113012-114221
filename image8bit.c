@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // The data structure
 //
@@ -598,29 +599,29 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
-  assert(img != NULL);
   // Variveis necesarias para os caculos
   float sum;
-  int num, imgHei = img->height, imgWid = img->width;
+  int num;
   // Cria uma copia da imagem para ir buscar os pixel para o blur
   Image imgc = ImageCreate(img->width, img->height, img->maxval);
   // for para copiar os valores dos pixeis
-  for (int pos = 0; pos < imgHei * imgWid; pos++) {
-    imgc->pixel[pos] = img->pixel[pos];
-  }
+  //for (int pos = 0; pos < img->height * img->width; pos++) {
+    //imgc->pixel[pos] = img->pixel[pos];
+  //}
+  memcpy(imgc->pixel,img->pixel,img->height*img->width*sizeof(uint8));
   // for para percorer as linhas
-  for (int y = 0; y < imgHei; y++) {
+  for (int y = 0; y < img->height; y++) {
     // for para percorrer as colunas
-    for (int x = 0; x < imgWid; x++) {
+    for (int x = 0; x < img->width; x++) {
       // reseter os valores para cada pixel
       sum = 0;
       num = 0;
       // for para percorer os pixeis do quadrado do blur
       for (int yh = y - dy; yh <= y + dy; yh++) {
-        if (yh < 0 || yh >= imgHei)
+        if (yh < 0 || yh >= img->height)
           continue;
         for (int xw = x - dx; xw <= x + dx; xw++) {
-          if (xw < 0 || xw >= imgWid)
+          if (xw < 0 || xw >= img->width)
             continue;
           sum += ImageGetPixel(imgc, xw, yh);
           num++;
