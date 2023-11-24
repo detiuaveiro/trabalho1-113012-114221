@@ -11,7 +11,7 @@
 
 // Student authors (fill in below):
 // NMec:113012  Name:José Almeida
-//
+// Mec:114221  Name:Bogdan Zabolotnyy
 //
 //
 // Date:
@@ -176,7 +176,7 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   image_1->width = width;
   image_1->maxval = maxval;
   // Alocaçao de memoria e valor(0) para os pixeis
-  image_1->pixel = (uint8 *)calloc( height * width,sizeof(uint8));
+  image_1->pixel = (uint8 *)calloc(height * width, sizeof(uint8));
 
   return image_1;
 }
@@ -558,7 +558,8 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   for (int yh = 0; yh < img2->height; yh++) {
     // for para percorrer as colunas
     for (int xw = 0; xw < img2->width; xw++) {
-      // if para testar cada pixel se nao um for diferente retorna 0 senao continua
+      // if para testar cada pixel se nao um for diferente retorna 0 senao
+      // continua
       if (!(ImageGetPixel(img1, x + xw, y + yh) == ImageGetPixel(img2, xw, yh)))
         return 0;
     }
@@ -597,40 +598,87 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
+
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
   // Variveis necesarias para os caculos
-  float sum;
-  int num;
+  float sumx = 0;
+  int numx = 0;
   // Cria uma copia da imagem para ir buscar os pixel para o blur
   Image imgc = ImageCreate(img->width, img->height, img->maxval);
-  // for para copiar os valores dos pixeis
-  //for (int pos = 0; pos < img->height * img->width; pos++) {
-    //imgc->pixel[pos] = img->pixel[pos];
-  //}
-  memcpy(imgc->pixel,img->pixel,img->height*img->width*sizeof(uint8));
+
+  memcpy(imgc->pixel, img->pixel, img->height * img->width * sizeof(uint8));
+  // float sumt[img->height][img->width][2];
+  float ***sumt = malloc(img->height * sizeof(float **));
+  for (int i = 0; i < img->height; i++) {
+    sumt[i] = malloc(img->width * sizeof(float *));
+    for (int j = 0; j < img->width; j++) {
+      sumt[i][j] = malloc(2 * sizeof(float));
+    }
+  }
+
   // for para percorer as linhas
+  for (int y = 0; y < img->height; y++) {
+    sumx = 0;
+    numx = 0;
+    for (int xw = 0; xw <= dx; xw++) {
+      if (xw >= img->width) {
+        break;
+      }
+      sumx += ImageGetPixel(imgc, xw, y);
+      numx++;
+    }
+    sumt[y][0][0] = sumx;
+    sumt[y][0][1] = numx;
+  }
+
+  for (int y = 0; y < img->height; y++) {
+    // for para percorrer as colunas
+    for (int x = 1; x < img->width; x++) {
+      // reseter os valores para cada pixel
+      sumt[y][x][0] = sumt[y][x - 1][0];
+      sumt[y][x][1] = sumt[y][x - 1][1];
+      if (x - dx < 0 && x + dx >= img->width) {
+        continue;
+      } else if (x - dx <= 0) {
+        sumt[y][x][0] += ImageGetPixel(imgc, x + dx, y);
+        sumt[y][x][1] += 1;
+      } else if (x + dx >= img->width) {
+        sumt[y][x][0] -= ImageGetPixel(imgc, x - dx, y);
+        sumt[y][x][1] -= 1;
+      } else {
+        sumt[y][x][0] += ImageGetPixel(imgc, x + dx, y);
+        sumt[y][x][0] -= ImageGetPixel(imgc, x - dx - 1, y);
+      }
+      // for para percorer os pixeis do quadrado do blur
+      // Alteraçao do pixel da imagem
+    }
+  }
+
   for (int y = 0; y < img->height; y++) {
     // for para percorrer as colunas
     for (int x = 0; x < img->width; x++) {
       // reseter os valores para cada pixel
-      sum = 0;
-      num = 0;
+      sumx = 0;
+      numx = 0;
       // for para percorer os pixeis do quadrado do blur
       for (int yh = y - dy; yh <= y + dy; yh++) {
         if (yh < 0 || yh >= img->height)
           continue;
-        for (int xw = x - dx; xw <= x + dx; xw++) {
-          if (xw < 0 || xw >= img->width)
-            continue;
-          sum += ImageGetPixel(imgc, xw, yh);
-          num++;
-        }
+        sumx += sumt[yh][x][0];
+        numx += sumt[yh][x][1];
       }
       // Alteraçao do pixel da imagem
-      ImageSetPixel(img, x, y, (int)((sum / num) + 0.5));
+      ImageSetPixel(img, x, y, (int)((sumx / numx) + 0.5));
     }
   }
+  for(int i = 0; i < img->height; i++) {
+  for(int j = 0; j < img->width; j++) {
+      free(sumt[i][j]);
+  }
+  free(sumt[i]);
+}
+free(sumt);
   // Destruiçao da copia
   ImageDestroy(&imgc);
 }
