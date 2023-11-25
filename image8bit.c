@@ -168,17 +168,28 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert(width >= 0);
   assert(height >= 0);
   assert(0 < maxval && maxval <= PixMax);
-  // Insert your code here!
   // Alocaçao de memoria a imagem;
   Image image_1 = (Image)malloc(sizeof(struct image));
-  // Alocaçao e inicializaçao da componetes da imagem
+  if (image_1== NULL) {
+    errCause = "Não foi possivel alocar memoria para a nova imagem";// defeni o erro
+    errno = 12;// 12 significa falha na alocaçao de memoria
+    return NULL;;// return null por causa do erro
+  }
+  // inicializaçao da componetes da imagem
   image_1->height = height;
   image_1->width = width;
   image_1->maxval = maxval;
   // Alocaçao de memoria e valor(0) para os pixeis
   image_1->pixel = (uint8 *)calloc(height * width, sizeof(uint8));
 
-  return image_1;
+  if(image_1==NULL){
+    free(image_1);// libera a memoria da imagem
+    errCause = "Não foi possivel alocar memoria para os pixeis da nova imagem";// defeni o erro
+    errno = 12;// 12 significa falha na alocaçao de memoria
+    return NULL;// return null por causa do erro
+  }
+
+  return image_1;// return a imagem
 }
 
 /// Destroy the image pointed to by (*imgp).
@@ -188,7 +199,7 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
 /// Should never fail, and should preserve global errno/errCause.
 void ImageDestroy(Image *imgp) { ///
   assert(imgp != NULL);
-  // Insert your code here!
+  // libera o array de pixeis e o pointer da imagem
   free((*imgp)->pixel);
   free(*imgp);
   *imgp = NULL;
@@ -306,17 +317,20 @@ int ImageMaxval(Image img) { ///
 /// *max is set to the maximum.
 void ImageStats(Image img, uint8 *min, uint8 *max) { ///
   assert(img != NULL);
-  // Insert your code here!
+  // Guarda o valor do primeiro pixel
   *min = img->pixel[0];
   *max = img->pixel[0];
-
+ // for para percorer a imagem
   for (long pos = 0; pos < img->height * img->width; pos++) {
+    // if para ver se o valor do pixel e menor que o anterior guardado
     if (img->pixel[pos] < *min) {
       *min = img->pixel[pos];
     }
+    // if para ver se o valor do pixel e maior que o anterior guardado
     if (img->pixel[pos] > *max) {
       *max = img->pixel[pos];
     }
+    // if para ver se os valores guardados ja sao os menores ou maior possiveis
     if (*max == img->maxval && *min == 0) {
       return;
     }
@@ -332,10 +346,8 @@ int ImageValidPos(Image img, int x, int y) { ///
 /// Check if rectangular area (x,y,w,h) is completely inside img.
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
-  // Insert your code here!
-  if (ImageValidPos(img, x, y) || ImageValidPos(img, x + w, y + h))
-    return 1;
-  return 0;
+  // verifica se retangulo pertence sso precisamos de confirmar cantos opostos
+  return (ImageValidPos(img, x, y) || ImageValidPos(img, x + w, y + h));
 }
 
 /// Pixel get & set operations
@@ -384,8 +396,9 @@ void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
 /// resulting in a "photographic negative" effect.
 void ImageNegative(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
+  // for para percorer a imagem
   for (long pos = 0; pos < img->height * img->width; pos++) {
+    // Alteraçao do pixel da imagem (valor maximo - valor do pixel)
     img->pixel[pos] = img->maxval - img->pixel[pos];
   }
 }
@@ -395,12 +408,16 @@ void ImageNegative(Image img) { ///
 /// all pixels with level>=thr to white (maxval).
 void ImageThreshold(Image img, uint8 thr) { ///
   assert(img != NULL);
-  // Insert your code here!
+  // for para percorer a imagem
   for (long pos = 0; pos < img->height * img->width; pos++) {
+    // if para verificar se o ponto >= thr
     if (img->pixel[pos] >= thr) {
+      // Alteraçao do pixel da imagem
       img->pixel[pos] = img->maxval;
+      // para ir para o proximo pixel
       continue;
     }
+    // Alteraçao do pixel da imagem
     img->pixel[pos] = 0;
   }
 }
@@ -415,12 +432,16 @@ void ImageBrighten(Image img, double factor) { ///
   // ? assert (factor >= 0.0);
   assert(factor >= 0);
 
-  // Insert your code here!
+  // for para percorer a imagem
   for (long pos = 0; pos < img->height * img->width; pos++) {
+    // if para verificar se a alteraçao nao ultrapasa o limite da imagem
     if ((int)(img->pixel[pos] * factor + 0.5) <= img->maxval) {
+      // Alteraçao do pixel da imagem
       img->pixel[pos] = (int)(img->pixel[pos] * factor + 0.5);
+      // para ir para o proxino pixel
       continue;
     }
+    // Alteraçao do pixel da imagem
     img->pixel[pos] = img->maxval;
   }
 }
@@ -449,12 +470,11 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
   // Insert your code here!
-  int imgInHEight = ImageHeight(img);
-  int imgInWidth = ImageWidth(img);
-  Image imgReturn = ImageCreate(imgInHEight, imgInWidth, ImageMaxval(img));
-  for (int y = 0; y < imgInHEight; y++) {
-    for (int x = 0; x < imgInWidth; x++) {
-      ImageSetPixel(imgReturn, y, imgInWidth - x - 1, ImageGetPixel(img, x, y));
+  // cria uma imagem para o rotate
+  Image imgReturn = ImageCreate(img->height, img->width, ImageMaxval(img));
+  for (int y = 0; y < img->height; y++) {
+    for (int x = 0; x < img->width; x++) {
+      ImageSetPixel(imgReturn, y, img->width - x - 1, ImageGetPixel(img, x, y));
     }
   }
 
@@ -470,13 +490,13 @@ Image ImageRotate(Image img) { ///
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
-  int imgInHEight = ImageHeight(img);
-  int imgInWidth = ImageWidth(img);
-  Image imgReturn = ImageCreate(imgInWidth, imgInHEight, ImageMaxval(img));
-  for (int y = 0; y < imgInHEight; y++) {
-    for (int x = 0; x < imgInWidth; x++) {
-      ImageSetPixel(imgReturn, x, y, ImageGetPixel(img, imgInWidth - x - 1, y));
+  // cria uma imagem para o mirror 
+  Image imgReturn = ImageCreate(img->width,img->height, ImageMaxval(img));
+  // for para percorer a imagem 
+  for (int y = 0; y < img->height; y++) {
+    for (int x = 0; x < img->width; x++) {
+      // alteraçao dos pixeis da imagem
+      ImageSetPixel(imgReturn, x, y, ImageGetPixel(img, img->width - x - 1, y));
     }
   }
   return imgReturn;
@@ -497,10 +517,12 @@ Image ImageMirror(Image img) { ///
 Image ImageCrop(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
   assert(ImageValidRect(img, x, y, w, h));
-  // Insert your code here!
+  // cria uma imagem para o crop
   Image imgReturn = ImageCreate(w, h, ImageMaxval(img));
+  // for para percorer a imagem pequena
   for (int yh = 0; yh < h; yh++) {
     for (int xw = 0; xw < w; xw++) {
+      // Alteraçao do pixel na imagem
       ImageSetPixel(imgReturn, xw, yh, ImageGetPixel(img, x + xw, y + yh));
     }
   }
@@ -517,9 +539,10 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+  // for para percorer a imagem pequena
   for (int yh = 0; yh < img2->height; yh++) {
     for (int xw = 0; xw < img2->width; xw++) {
+      // Alteraçao do pixel imagem
       ImageSetPixel(img1, x + xw, y + yh, ImageGetPixel(img2, xw, yh));
     }
   }
@@ -535,12 +558,15 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+  // inciar variavel intermedia
   uint8 level = 0;
+  // for para percorer a imagem pequena
   for (int yh = 0; yh < img2->height; yh++) {
     for (int xw = 0; xw < img2->width; xw++) {
+      // calculo do novo valor do pixel
       level = (int)((1 - alpha) * ImageGetPixel(img1, x + xw, y + yh) +
                     (alpha)*ImageGetPixel(img2, xw, yh) + 0.5);
+      // Alteraçao do pixel na imagem
       ImageSetPixel(img1, x + xw, y + yh, level);
     }
   }
@@ -553,7 +579,6 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
-  // Insert your code here!
   // for para percorer as linhas
   for (int yh = 0; yh < img2->height; yh++) {
     // for para percorrer as colunas
@@ -605,8 +630,8 @@ void ImageBlur(Image img, int dx, int dy) { ///
   uint8 *imgcopy = (uint8 *)malloc(img->height * img->width * sizeof(uint8));
   memcpy(imgcopy, img->pixel, img->height * img->width * sizeof(uint8));
   // Criaçao de array para guardar a soma dos pixeis e o numero
-  float *sumt = (float *)calloc(img->height * img->width , sizeof(float));
-  int *numt = (int *)calloc(img->height * img->width ,sizeof(int));
+  float *sumt = (float *)malloc(img->height * img->width*sizeof(float));
+  int *numt = (int *)malloc(img->height * img->width*sizeof(int));
 
   // for para inicializar a primeira coluna de somas e numeros
   // pecorre cada linha
