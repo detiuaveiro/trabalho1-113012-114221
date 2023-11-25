@@ -145,11 +145,15 @@ static int check(int condition, const char *failmsg) {
 void ImageInit(void) { ///
   InstrCalibrate();
   InstrName[0] = "pixmem"; // InstrCount[0] will count pixel array acesses
+  InstrName[1] = "SOMCON";
+  InstrName[2] = "NUMCON";
   // Name other counters here...
 }
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
+#define SOMCON InstrCount[1]
+#define NUMCON InstrCount[2]
 // Add more macros here...
 
 // TIP: Search for PIXMEM or InstrCount to see where it is incremented!
@@ -170,10 +174,12 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert(0 < maxval && maxval <= PixMax);
   // Alocaçao de memoria a imagem;
   Image image_1 = (Image)malloc(sizeof(struct image));
-  if (image_1== NULL) {
-    errCause = "Não foi possivel alocar memoria para a nova imagem";// defeni o erro
-    errno = 12;// 12 significa falha na alocaçao de memoria
-    return NULL;;// return null por causa do erro
+  if (image_1 == NULL) {
+    errCause =
+        "Não foi possivel alocar memoria para a nova imagem"; // defeni o erro
+    errno = 12; // 12 significa falha na alocaçao de memoria
+    return NULL;
+    ; // return null por causa do erro
   }
   // inicializaçao da componetes da imagem
   image_1->height = height;
@@ -182,14 +188,17 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   // Alocaçao de memoria e valor(0) para os pixeis
   image_1->pixel = (uint8 *)calloc(height * width, sizeof(uint8));
 
-  if(image_1==NULL){
-    free(image_1);// libera a memoria da imagem
-    errCause = "Não foi possivel alocar memoria para os pixeis da nova imagem";// defeni o erro
-    errno = 12;// 12 significa falha na alocaçao de memoria
-    return NULL;// return null por causa do erro
+  if (image_1 == NULL) {
+    free(image_1); // libera a memoria da imagem
+    errCause =
+        "Não foi possivel alocar memoria para os pixeis da nova imagem"; // defeni
+                                                                         // o
+                                                                         // erro
+    errno = 12;  // 12 significa falha na alocaçao de memoria
+    return NULL; // return null por causa do erro
   }
 
-  return image_1;// return a imagem
+  return image_1; // return a imagem
 }
 
 /// Destroy the image pointed to by (*imgp).
@@ -208,7 +217,7 @@ void ImageDestroy(Image *imgp) { ///
 /// PGM file operations
 
 // See also:
-// PGM format specification: http://netpbm.sourceforge.net/doc/pgm.html
+// PGM format specification: http://netpbm._.net/doc/pgm.html
 
 // Match and skip 0 or more comment lines in file f.
 // Comments start with a # and continue until the end-of-line, inclusive.
@@ -320,7 +329,7 @@ void ImageStats(Image img, uint8 *min, uint8 *max) { ///
   // Guarda o valor do primeiro pixel
   *min = img->pixel[0];
   *max = img->pixel[0];
- // for para percorer a imagem
+  // for para percorer a imagem
   for (long pos = 0; pos < img->height * img->width; pos++) {
     // if para ver se o valor do pixel e menor que o anterior guardado
     if (img->pixel[pos] < *min) {
@@ -490,9 +499,9 @@ Image ImageRotate(Image img) { ///
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
-  // cria uma imagem para o mirror 
-  Image imgReturn = ImageCreate(img->width,img->height, ImageMaxval(img));
-  // for para percorer a imagem 
+  // cria uma imagem para o mirror
+  Image imgReturn = ImageCreate(img->width, img->height, ImageMaxval(img));
+  // for para percorer a imagem
   for (int y = 0; y < img->height; y++) {
     for (int x = 0; x < img->width; x++) {
       // alteraçao dos pixeis da imagem
@@ -630,12 +639,12 @@ void ImageBlur(Image img, int dx, int dy) { ///
   uint8 *imgcopy = (uint8 *)malloc(img->height * img->width * sizeof(uint8));
   memcpy(imgcopy, img->pixel, img->height * img->width * sizeof(uint8));
   // Criaçao de array para guardar a soma dos pixeis e o numero
-  float *sumt = (float *)malloc(img->height * img->width*sizeof(float));
-  int *numt = (int *)malloc(img->height * img->width*sizeof(int));
+  float *sumt = (float *)malloc(img->height * img->width * sizeof(float));
+  int *numt = (int *)malloc(img->height * img->width * sizeof(int));
 
   // for para inicializar a primeira coluna de somas e numeros
   // pecorre cada linha
-  for (int y = 0; y < img->height; y++) {   
+  for (int y = 0; y < img->height; y++) {
     sumx = 0;
     numx = 0;
     // faz a soma do primeiro pixel
@@ -643,38 +652,50 @@ void ImageBlur(Image img, int dx, int dy) { ///
       if (xw >= img->width) {
         break;
       }
+      SOMCON += 1;
+      PIXMEM += 1;
+      NUMCON += 1;
       sumx += imgcopy[xw + y * img->width];
       numx++;
     }
     sumt[y * img->width] = sumx;
     numt[y * img->width] = numx;
   }
-  // for para calcular a soma e num dos restantes pontos 
+  // for para calcular a soma e num dos restantes pontos
   for (int y = 0; y < img->height; y++) {
     for (int x = 1; x < img->width; x++) {
-      //inicializa copiando a soma do pixel anteirior
+      // inicializa copiando a soma do pixel anteirior
       sumt[x + y * img->width] = sumt[x - 1 + y * img->width];
       numt[x + y * img->width] = numt[x - 1 + y * img->width];
       // if para cada situaçao
       // se o range for maior que a imagem ele nao faz nada
       if (x - dx < 0 && x + dx >= img->width) {
         continue;
-        // se o primeiro ponto estiver fora da imagem ou no primeiro pixel adiciona um novo pixel
+        // se o primeiro ponto estiver fora da imagem ou no primeiro pixel
+        // adiciona um novo pixel
       } else if (x - dx <= 0) {
+        SOMCON += 1;
+        NUMCON += 1;
+        PIXMEM += 1;
         sumt[x + y * img->width] += imgcopy[x + dx + y * img->width];
         numt[x + y * img->width] += 1;
         // se o ultimo estiver fora da imagem retira o primeiro pixel
       } else if (x + dx >= img->width) {
+        SOMCON += 1;
+        NUMCON += 1;
+        PIXMEM += 1;
         sumt[x + y * img->width] -= imgcopy[x - dx + y * img->width];
         numt[x + y * img->width] -= 1;
         // retira o primeiro e adiciona o um novo pixel
       } else {
+        SOMCON += 2;
+        PIXMEM += 1;
         sumt[x + y * img->width] += imgcopy[x + dx + y * img->width];
         sumt[x + y * img->width] -= imgcopy[x - dx - 1 + y * img->width];
       }
     }
   }
- // for para percorres toda a imagem e fazer a soma
+  // for para percorres toda a imagem e fazer a soma
   for (int y = 0; y < img->height; y++) {
     for (int x = 0; x < img->width; x++) {
       // reseter os valores para cada pixel
@@ -684,6 +705,8 @@ void ImageBlur(Image img, int dx, int dy) { ///
       for (int yh = y - dy; yh <= y + dy; yh++) {
         if (yh < 0 || yh >= img->height)
           continue;
+        SOMCON += 1;
+        NUMCON += 1;
         sumx += sumt[x + yh * img->width];
         numx += numt[x + yh * img->width];
       }
