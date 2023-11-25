@@ -574,8 +574,6 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
-  // Insert your code here!
-
   // for para percorer as linhas
   for (int y = 0; y < img1->height - img2->height; y++) {
     // for para percorrer as colunas
@@ -598,87 +596,79 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
   // Variveis necesarias para os caculos
   float sumx = 0;
   int numx = 0;
   // Cria uma copia da imagem para ir buscar os pixel para o blur
-  Image imgc = ImageCreate(img->width, img->height, img->maxval);
+  uint8 *imgcopy = (uint8 *)malloc(img->height * img->width * sizeof(uint8));
+  memcpy(imgcopy, img->pixel, img->height * img->width * sizeof(uint8));
+  // Criaçao de array para guardar a soma dos pixeis e o numero
+  float *sumt = (float *)calloc(img->height * img->width , sizeof(float));
+  int *numt = (int *)calloc(img->height * img->width ,sizeof(int));
 
-  memcpy(imgc->pixel, img->pixel, img->height * img->width * sizeof(uint8));
-  // float sumt[img->height][img->width][2];
-  float ***sumt = malloc(img->height * sizeof(float **));
-  for (int i = 0; i < img->height; i++) {
-    sumt[i] = malloc(img->width * sizeof(float *));
-    for (int j = 0; j < img->width; j++) {
-      sumt[i][j] = malloc(2 * sizeof(float));
-    }
-  }
-
-  // for para percorer as linhas
-  for (int y = 0; y < img->height; y++) {
+  // for para inicializar a primeira coluna de somas e numeros
+  // pecorre cada linha
+  for (int y = 0; y < img->height; y++) {   
     sumx = 0;
     numx = 0;
+    // faz a soma do primeiro pixel
     for (int xw = 0; xw <= dx; xw++) {
       if (xw >= img->width) {
         break;
       }
-      sumx += ImageGetPixel(imgc, xw, y);
+      sumx += imgcopy[xw + y * img->width];
       numx++;
     }
-    sumt[y][0][0] = sumx;
-    sumt[y][0][1] = numx;
+    sumt[y * img->width] = sumx;
+    numt[y * img->width] = numx;
   }
-
+  // for para calcular a soma e num dos restantes pontos 
   for (int y = 0; y < img->height; y++) {
-    // for para percorrer as colunas
     for (int x = 1; x < img->width; x++) {
-      // reseter os valores para cada pixel
-      sumt[y][x][0] = sumt[y][x - 1][0];
-      sumt[y][x][1] = sumt[y][x - 1][1];
+      //inicializa copiando a soma do pixel anteirior
+      sumt[x + y * img->width] = sumt[x - 1 + y * img->width];
+      numt[x + y * img->width] = numt[x - 1 + y * img->width];
+      // if para cada situaçao
+      // se o range for maior que a imagem ele nao faz nada
       if (x - dx < 0 && x + dx >= img->width) {
         continue;
+        // se o primeiro ponto estiver fora da imagem ou no primeiro pixel adiciona um novo pixel
       } else if (x - dx <= 0) {
-        sumt[y][x][0] += ImageGetPixel(imgc, x + dx, y);
-        sumt[y][x][1] += 1;
+        sumt[x + y * img->width] += imgcopy[x + dx + y * img->width];
+        numt[x + y * img->width] += 1;
+        // se o ultimo estiver fora da imagem retira o primeiro pixel
       } else if (x + dx >= img->width) {
-        sumt[y][x][0] -= ImageGetPixel(imgc, x - dx, y);
-        sumt[y][x][1] -= 1;
+        sumt[x + y * img->width] -= imgcopy[x - dx + y * img->width];
+        numt[x + y * img->width] -= 1;
+        // retira o primeiro e adiciona o um novo pixel
       } else {
-        sumt[y][x][0] += ImageGetPixel(imgc, x + dx, y);
-        sumt[y][x][0] -= ImageGetPixel(imgc, x - dx - 1, y);
+        sumt[x + y * img->width] += imgcopy[x + dx + y * img->width];
+        sumt[x + y * img->width] -= imgcopy[x - dx - 1 + y * img->width];
       }
-      // for para percorer os pixeis do quadrado do blur
-      // Alteraçao do pixel da imagem
     }
   }
-
+ // for para percorres toda a imagem e fazer a soma
   for (int y = 0; y < img->height; y++) {
-    // for para percorrer as colunas
     for (int x = 0; x < img->width; x++) {
       // reseter os valores para cada pixel
       sumx = 0;
       numx = 0;
-      // for para percorer os pixeis do quadrado do blur
+      // for para percorer as linhas para calcular a media
       for (int yh = y - dy; yh <= y + dy; yh++) {
         if (yh < 0 || yh >= img->height)
           continue;
-        sumx += sumt[yh][x][0];
-        numx += sumt[yh][x][1];
+        sumx += sumt[x + yh * img->width];
+        numx += numt[x + yh * img->width];
       }
       // Alteraçao do pixel da imagem
       ImageSetPixel(img, x, y, (int)((sumx / numx) + 0.5));
     }
   }
-  for(int i = 0; i < img->height; i++) {
-  for(int j = 0; j < img->width; j++) {
-      free(sumt[i][j]);
-  }
-  free(sumt[i]);
-}
-free(sumt);
+  // Destruiçao dos arrays intermedios
+  free(sumt);
+  free(numt);
   // Destruiçao da copia
-  ImageDestroy(&imgc);
+  free(imgcopy);
 }
